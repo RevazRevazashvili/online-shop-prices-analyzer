@@ -4,18 +4,21 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.chrome.options import Options
 import pandas as pd
 import time
-service = Service(executable_path='chromedriver.exe')
-driver = webdriver.Chrome(service=service)
-wait = WebDriverWait(driver, 10)
-driver.get('https://alta.ge/')
-input_search = driver.find_element(By.ID,'search_input')
-
-wait = WebDriverWait(driver, 5)
-search_button = wait.until(EC.presence_of_element_located((By.XPATH, '(//button[@type="submit"])[1]')))
 
 def find_product(product_name):
+    # chrome_options = Options()
+    # chrome_options.add_argument("--headless")
+    service = Service(executable_path='chromedriver.exe')
+    driver = webdriver.Chrome(service=service)
+    wait = WebDriverWait(driver, 10)
+    driver.get('https://alta.ge/')
+    input_search = driver.find_element(By.ID, 'search_input')
+
+    wait = WebDriverWait(driver, 5)
+    search_button = wait.until(EC.presence_of_element_located((By.XPATH, '(//button[@type="submit"])[1]')))
     input_search.send_keys(product_name)
     time.sleep(1)
     search_button.click()
@@ -36,19 +39,24 @@ def find_product(product_name):
     page_quantity = int(page_quantity)
     names = []
     prices = []
-    for i in range(page_quantity):
-        name = driver.find_elements(By.XPATH,"//a[@class='product-title']")
-        price = driver.find_elements(By.XPATH,"//span[@class='ty-price-num']")
+    if page_quantity != 0:
+        for i in range(page_quantity):
+            name = driver.find_elements(By.XPATH,"//a[@class='product-title']")
+            price = driver.find_elements(By.XPATH,"//span[@class='ty-price-num']")
+            for j in range(len(name)):
+                names.append(name[j].text)
+                prices.append(price[j].text)
+    else:
+        name = driver.find_elements(By.XPATH, "//a[@class='product-title']")
+        price = driver.find_elements(By.XPATH, "//span[@class='ty-price-num']")
         for j in range(len(name)):
             names.append(name[j].text)
             prices.append(price[j].text)
-
     df = pd.DataFrame()
 
     df['product'] = names
     df['price'] = prices
 
-# after 10 seconds chrome will quit
-time.sleep(20)
-
-driver.quit()
+    # after 10 seconds chrome will quit
+    # time.sleep(20)
+    return df
